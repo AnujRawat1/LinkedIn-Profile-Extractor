@@ -18,4 +18,12 @@ public class HttpClientConfig {
                 .baseUrl(properties.getBaseUrl())
                 .build();
     }
+
+    @Bean
+    public RestClient voyagerRestClient() {
+
+        return RestClient.builder()
+                .baseUrl(properties.getVoyagerBaseUrl())
+                .build();
+    }
 }

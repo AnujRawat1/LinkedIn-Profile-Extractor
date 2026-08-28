@@ -26,14 +26,23 @@ public class ProfileService {
 
         log.info("Starting profile extraction for LinkedIn username: {}", username);
 
-        // TODO: This needs OAuth access token
-        // For now, we'll use a placeholder to test the flow
-        // In production, this would come from the OAuth flow or token storage
-        String accessToken = "PLACEHOLDER_TOKEN";
+        // TODO: This needs li_at cookie from a logged-in LinkedIn session
+        // In production, this would come from session management or user-provided
+        String liAtCookie = System.getenv("LINKEDIN_LI_AT_COOKIE");
 
-        String rawResponse = linkedInHttpClient.fetchProfileData(accessToken, username);
+        if (liAtCookie == null || liAtCookie.isEmpty()) {
+            throw new IllegalStateException(
+                    "LINKEDIN_LI_AT_COOKIE environment variable is required for Voyager API access"
+            );
+        }
+
+        String rawResponse = linkedInHttpClient.fetchVoyagerProfile(liAtCookie, username);
+
+        log.info("LinkedIn profile request completed for username: {}", username);
 
         ProfileData profileData = profileParser.parse(rawResponse, normalizedUrl);
+
+        log.info("Profile parsing completed for username: {}", username);
 
         return new ProfileResponse(
                 true,

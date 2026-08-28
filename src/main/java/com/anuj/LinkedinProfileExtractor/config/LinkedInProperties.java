@@ -21,4 +21,8 @@ public class LinkedInProperties {
 
     private String profileEndpoint;
 
+    // Voyager API configuration
+    private String voyagerBaseUrl;
+    private String profileDecorationId;
+
 }

@@ -16,3 +16,7 @@ linkedin:
 
   base-url: https://api.linkedin.com
   profile-endpoint: /v2/userinfo
+
+  # Voyager API (internal LinkedIn web API)
+  voyager-base-url: https://www.linkedin.com
+  profile-decoration-id: com.linkedin.voyager.dash.deco.identity.profile.FullProfileWithEntities-93
