@@ -19,7 +19,7 @@ public class LinkedInOAuthService {
     private final LinkedInHttpClient linkedInHttpClient;
 
     public String fetchProfile(String accessToken) {
-        return linkedInHttpClient.fetchProfile(accessToken);
+        return linkedInHttpClient.fetchUserInfo(accessToken);
     }
 
     public LinkedInTokenResponse exchangeCodeForAccessToken(
