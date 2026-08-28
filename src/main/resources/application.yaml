@@ -5,3 +5,7 @@ spring:
 
 server:
   port: 8080
+
+linkedin:
+  base-url: ${LINKEDIN_BASE_URL}
+  api-token: ${LINKEDIN_API_TOKEN}
