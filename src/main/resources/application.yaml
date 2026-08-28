@@ -9,3 +9,4 @@ server:
 linkedin:
   base-url: ${LINKEDIN_BASE_URL}
   api-token: ${LINKEDIN_API_TOKEN}
+  profile-endpoint: ${LINKEDIN_PROFILE_ENDPOINT:}

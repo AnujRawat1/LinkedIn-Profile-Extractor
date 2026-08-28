@@ -11,5 +11,5 @@ public class LinkedInProperties {
 
     private String baseUrl;
     private String apiToken;
-
+    private String profileEndpoint;
 }

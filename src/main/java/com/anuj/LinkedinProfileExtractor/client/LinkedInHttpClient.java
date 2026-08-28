@@ -17,7 +17,16 @@ public class LinkedInHttpClient implements LinkedInClient {
 
         return restClient
                 .get()
-                .uri(profileUrl)
+                .uri(uriBuilder ->
+                        uriBuilder
+                                .path(properties.getProfileEndpoint())
+                                .queryParam("profileUrl", profileUrl)
+                                .build()
+                )
+                .header(
+                        "Authorization",
+                        "Bearer " + properties.getApiToken()
+                )
                 .retrieve()
                 .body(String.class);
     }

@@ -1,0 +1,66 @@
+{
+  "name": "John Doe",
+  "headline": "Senior Software Engineer",
+  "location": "Bengaluru, India",
+  "about": "Backend engineer with experience in Java and Spring Boot.",
+  "profileImages": {
+    "profileImage": "https://example.com/profile.jpg",
+    "backgroundImage": "https://example.com/background.jpg"
+  },
+  "experience": [
+    {
+      "title": "Senior Software Engineer",
+      "company": "ABC Technologies",
+      "location": "Bengaluru, India",
+      "startDate": "2022-01",
+      "endDate": null,
+      "current": true,
+      "description": "Building backend services using Java and Spring Boot."
+    },
+    {
+      "title": "Software Engineer",
+      "company": "XYZ Technologies",
+      "location": "Delhi, India",
+      "startDate": "2020-01",
+      "endDate": "2021-12",
+      "current": false,
+      "description": "Developed REST APIs."
+    }
+  ],
+  "education": [
+    {
+      "institution": "ABC University",
+      "degree": "Bachelor of Technology",
+      "fieldOfStudy": "Computer Science",
+      "startDate": "2016",
+      "endDate": "2020",
+      "description": null
+    }
+  ],
+  "skills": [
+    "Java",
+    "Spring Boot",
+    "Microservices",
+    "PostgreSQL"
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Developer",
+      "issuer": "Amazon Web Services",
+      "issueDate": "2024-03",
+      "expirationDate": "2027-03",
+      "credentialId": "ABC123",
+      "credentialUrl": "https://example.com/certificate"
+    }
+  ],
+  "languages": [
+    {
+      "name": "English",
+      "proficiency": "Professional Working"
+    },
+    {
+      "name": "Hindi",
+      "proficiency": "Native"
+    }
+  ]
+}
