@@ -11,12 +11,13 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileResponse {
+public class Certification {
 
-    private boolean success;
-    private String message;
-    private String username;
-    private ProfileData data;
+    private String name;
+    private String issuer;
+    private String issueDate;
+    private String expirationDate;
+    private String credentialId;
+    private String credentialUrl;
 
 }
-

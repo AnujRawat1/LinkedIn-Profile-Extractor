@@ -11,12 +11,14 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileResponse {
+public class Experience {
 
-    private boolean success;
-    private String message;
-    private String username;
-    private ProfileData data;
+    private String title;
+    private String company;
+    private String location;
+    private String startDate;
+    private String endDate;
+    private boolean current;
+    private String description;
 
 }
-

@@ -11,12 +11,9 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileResponse {
+public class ProfileImages {
 
-    private boolean success;
-    private String message;
-    private String username;
-    private ProfileData data;
+    private String profileImage;
+    private String backgroundImage;
 
 }
-

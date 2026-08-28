@@ -1,6 +1,7 @@
 package com.anuj.LinkedinProfileExtractor.service;
 
 import com.anuj.LinkedinProfileExtractor.client.LinkedInClient;
+import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileRequest;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileResponse;
 import com.anuj.LinkedinProfileExtractor.util.LinkedInUrlUtil;
@@ -17,13 +18,17 @@ public class ProfileService {
     public ProfileResponse getProfile(ProfileRequest request) {
 
         String username = linkedInUrlUtil.extractUsername(request.profileUrl());
-
         String normalizedUrl = linkedInUrlUtil.normalizeUrl(request.profileUrl());
+
+        ProfileData profileData = ProfileData.builder()
+                .profileUrl(normalizedUrl)
+                .build();
 
         return new ProfileResponse(
                 true,
                 "Profile URL validated successfully",
-                normalizedUrl
+                username,
+                profileData
         );
     }
 }
