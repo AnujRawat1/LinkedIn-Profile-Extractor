@@ -5,7 +5,6 @@ import com.anuj.LinkedinProfileExtractor.dto.Education;
 import com.anuj.LinkedinProfileExtractor.dto.Experience;
 import com.anuj.LinkedinProfileExtractor.dto.Language;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
-import com.anuj.LinkedinProfileExtractor.dto.ProfileImages;
 import com.anuj.LinkedinProfileExtractor.exception.ProfileParseException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -35,8 +34,7 @@ public class LinkedInProfileParser implements ProfileParser {
                     .headline(getText(root, "headline"))
                     .location(getText(root, "location"))
                     .about(getText(root, "about"))
-                    .profileUrl(profileUrl)
-                    .profileImages(parseImages(root))
+                    .profileImage(getText(root, "profileImage"))
                     .experience(parseExperience(root))
                     .education(parseEducation(root))
                     .skills(parseSkills(root))
@@ -60,19 +58,6 @@ public class LinkedInProfileParser implements ProfileParser {
         return node.asText();
     }
 
-    private ProfileImages parseImages(JsonNode root) {
-
-        JsonNode images = root.get("profileImages");
-
-        if (images == null || images.isNull()) {
-            return null;
-        }
-
-        return ProfileImages.builder()
-                .profileImage(getText(images, "profileImage"))
-                .backgroundImage(getText(images, "backgroundImage"))
-                .build();
-    }
 
     private List<Experience> parseExperience(JsonNode root) {
 
@@ -90,6 +75,7 @@ public class LinkedInProfileParser implements ProfileParser {
                     Experience.builder()
                             .title(getText(node, "title"))
                             .company(getText(node, "company"))
+                            .companyUrl(getText(node, "companyUrl"))
                             .location(getText(node, "location"))
                             .startDate(getText(node, "startDate"))
                             .endDate(getText(node, "endDate"))
@@ -116,12 +102,11 @@ public class LinkedInProfileParser implements ProfileParser {
 
             educationList.add(
                     Education.builder()
-                            .institution(getText(node, "institution"))
+                            .school(getText(node, "school"))
                             .degree(getText(node, "degree"))
                             .fieldOfStudy(getText(node, "fieldOfStudy"))
                             .startDate(getText(node, "startDate"))
                             .endDate(getText(node, "endDate"))
-                            .description(getText(node, "description"))
                             .build()
             );
         }
@@ -168,15 +153,7 @@ public class LinkedInProfileParser implements ProfileParser {
                             .name(getText(node, "name"))
                             .issuer(getText(node, "issuer"))
                             .issueDate(getText(node, "issueDate"))
-                            .expirationDate(
-                                    getText(node, "expirationDate")
-                            )
-                            .credentialId(
-                                    getText(node, "credentialId")
-                            )
-                            .credentialUrl(
-                                    getText(node, "credentialUrl")
-                            )
+                            .credentialUrl(getText(node, "credentialUrl"))
                             .build()
             );
         }

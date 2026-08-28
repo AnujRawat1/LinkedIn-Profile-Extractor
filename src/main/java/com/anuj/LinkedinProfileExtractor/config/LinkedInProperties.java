@@ -9,7 +9,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "linkedin")
 public class LinkedInProperties {
 
+    private String clientId;
+    private String clientSecret;
+
+    private String redirectUri;
+
+    private String authorizationUrl;
+
+    private String tokenUrl;
     private String baseUrl;
-    private String apiToken;
+
     private String profileEndpoint;
+
 }

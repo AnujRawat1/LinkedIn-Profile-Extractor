@@ -1,5 +1,6 @@
 package com.anuj.LinkedinProfileExtractor.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,9 +12,9 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileImages {
+public class ProfileExtractionRequest {
 
-    private String profileImage;
-    private String backgroundImage;
+    @NotBlank(message = "LinkedIn profile URL is required")
+    private String profileUrl;
 
 }

@@ -13,11 +13,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Education {
 
-    private String institution;
+    private String school;
     private String degree;
     private String fieldOfStudy;
     private String startDate;
     private String endDate;
-    private String description;
 
 }

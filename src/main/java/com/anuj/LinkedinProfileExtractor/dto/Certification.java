@@ -16,8 +16,6 @@ public class Certification {
     private String name;
     private String issuer;
     private String issueDate;
-    private String expirationDate;
-    private String credentialId;
     private String credentialUrl;
 
 }

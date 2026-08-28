@@ -15,6 +15,7 @@ public class Experience {
 
     private String title;
     private String company;
+    private String companyUrl;
     private String location;
     private String startDate;
     private String endDate;

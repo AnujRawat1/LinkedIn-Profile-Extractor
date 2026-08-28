@@ -7,6 +7,12 @@ server:
   port: 8080
 
 linkedin:
-  base-url: ${LINKEDIN_BASE_URL:}
-  profile-endpoint: ${LINKEDIN_PROFILE_ENDPOINT:}
-  api-token: ${LINKEDIN_API_TOKEN:}
+  client-id: ${LINKEDIN_CLIENT_ID}
+  client-secret: ${LINKEDIN_CLIENT_SECRET}
+  redirect-uri: ${LINKEDIN_REDIRECT_URI}
+
+  authorization-url: https://www.linkedin.com/oauth/v2/authorization
+  token-url: https://www.linkedin.com/oauth/v2/accessToken
+
+  base-url: https://api.linkedin.com
+  profile-endpoint: /v2/userinfo

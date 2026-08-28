@@ -19,9 +19,7 @@ public class ProfileData {
     private String headline;
     private String location;
     private String about;
-    private String profileUrl;
-
-    private ProfileImages profileImages;
+    private String profileImage;
 
     private List<Experience> experience;
     private List<Education> education;
