@@ -17,13 +17,15 @@ public class LinkedInHttpClient implements LinkedInClient {
     public String fetchProfile(String profileUrl) {
 
         try {
+
             return restClient
                     .get()
                     .uri(uriBuilder ->
                             uriBuilder
                                     .path(properties.getProfileEndpoint())
                                     .queryParam(
-                                            "profileUrl", profileUrl
+                                            "profileUrl",
+                                            profileUrl
                                     )
                                     .build()
                     )
@@ -35,7 +37,11 @@ public class LinkedInHttpClient implements LinkedInClient {
                     .body(String.class);
 
         } catch (Exception e) {
-            throw new ProfileFetchException("Unable to retrieve LinkedIn profile", e);
+
+            throw new ProfileFetchException(
+                    "Unable to retrieve LinkedIn profile",
+                    e
+            );
         }
     }
 }

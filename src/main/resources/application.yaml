@@ -7,6 +7,6 @@ server:
   port: 8080
 
 linkedin:
-  base-url: ${LINKEDIN_BASE_URL}
-  api-token: ${LINKEDIN_API_TOKEN}
+  base-url: ${LINKEDIN_BASE_URL:}
   profile-endpoint: ${LINKEDIN_PROFILE_ENDPOINT:}
+  api-token: ${LINKEDIN_API_TOKEN:}
