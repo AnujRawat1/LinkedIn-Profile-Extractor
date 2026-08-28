@@ -6,8 +6,9 @@ import com.anuj.LinkedinProfileExtractor.dto.Experience;
 import com.anuj.LinkedinProfileExtractor.dto.Language;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileImages;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.anuj.LinkedinProfileExtractor.exception.ProfileParseException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -44,10 +45,7 @@ public class LinkedInProfileParser implements ProfileParser {
                     .build();
 
         } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "Unable to parse profile response",
-                    e
-            );
+            throw new ProfileParseException("Unable to parse profile response", e);
         }
     }
 

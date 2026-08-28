@@ -1,7 +1,7 @@
 package com.anuj.LinkedinProfileExtractor.parser;
 
 import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

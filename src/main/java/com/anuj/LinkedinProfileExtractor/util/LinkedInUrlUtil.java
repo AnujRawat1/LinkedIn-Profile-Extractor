@@ -1,5 +1,6 @@
 package com.anuj.LinkedinProfileExtractor.util;
 
+import com.anuj.LinkedinProfileExtractor.exception.InvalidLinkedInUrlException;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -19,7 +20,9 @@ public class LinkedInUrlUtil {
         String path = uri.getPath();
 
         if (path == null || !path.matches("^/in/[^/]+/?$")) {
-            throw new IllegalArgumentException("URL must be a valid LinkedIn profile URL");
+            throw new InvalidLinkedInUrlException(
+                    "URL must be a valid LinkedIn profile URL"
+            );
         }
 
         String[] parts = path.split("/");
@@ -28,23 +31,39 @@ public class LinkedInUrlUtil {
     }
 
     public String normalizeUrl(String profileUrl) {
+
         String username = extractUsername(profileUrl);
-        return "https://www.linkedin.com/in/" + username + "/";
+
+        return "https://www.linkedin.com/in/"
+                + username
+                + "/";
     }
 
     private URI parseUrl(String profileUrl) {
 
+        if (profileUrl == null || profileUrl.isBlank()) {
+            throw new InvalidLinkedInUrlException(
+                    "LinkedIn profile URL cannot be empty"
+            );
+        }
+
         try {
+
             URI uri = new URI(profileUrl);
 
             if (!"https".equalsIgnoreCase(uri.getScheme())) {
-                throw new IllegalArgumentException("LinkedIn URL must use HTTPS");
+                throw new InvalidLinkedInUrlException(
+                        "LinkedIn URL must use HTTPS"
+                );
             }
 
             return uri;
 
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Invalid URL format");
+
+            throw new InvalidLinkedInUrlException(
+                    "Invalid URL format"
+            );
         }
     }
 
@@ -53,7 +72,7 @@ public class LinkedInUrlUtil {
         String host = uri.getHost();
 
         if (host == null || !host.equalsIgnoreCase(LINKEDIN_HOST)) {
-            throw new IllegalArgumentException("URL must belong to linkedin.com");
+            throw new InvalidLinkedInUrlException("URL must belong to linkedin.com");
         }
     }
 }
