@@ -1,4 +1,7 @@
 package com.anuj.LinkedinProfileExtractor.client;
 
-public class LinkedInClient {
+public interface LinkedInClient {
+
+    String fetchProfile(String profileUrl);
+
 }
