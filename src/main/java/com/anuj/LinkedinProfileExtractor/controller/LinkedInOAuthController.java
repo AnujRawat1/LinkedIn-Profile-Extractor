@@ -3,6 +3,8 @@ package com.anuj.LinkedinProfileExtractor.controller;
 import com.anuj.LinkedinProfileExtractor.config.LinkedInProperties;
 import com.anuj.LinkedinProfileExtractor.model.LinkedInTokenResponse;
 import com.anuj.LinkedinProfileExtractor.service.LinkedInOAuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,12 +19,17 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth/linkedin")
 @RequiredArgsConstructor
+@Tag(name = "OAuth Authentication", description = "LinkedIn OAuth authentication flow")
 public class LinkedInOAuthController {
 
     private final LinkedInProperties properties;
     private final LinkedInOAuthService linkedInOAuthService;
 
     @GetMapping
+    @Operation(
+            summary = "Initiate LinkedIn OAuth authorization",
+            description = "Redirects user to LinkedIn for authorization"
+    )
     public RedirectView authenticate() {
 
         String state = UUID.randomUUID().toString();
@@ -39,6 +46,10 @@ public class LinkedInOAuthController {
     }
 
     @GetMapping("/callback")
+    @Operation(
+            summary = "OAuth callback handler",
+            description = "Exchanges authorization code for access token"
+    )
     public String callback(
             @RequestParam String code,
             @RequestParam String state) {
