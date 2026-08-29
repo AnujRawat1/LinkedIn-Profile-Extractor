@@ -117,6 +117,22 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(org.springframework.web.client.HttpClientErrorException.class)
+    public ResponseEntity<ErrorResponse> handleHttpClientError(org.springframework.web.client.HttpClientErrorException exception) {
+        log.error("HTTP client error: {} - {}", exception.getStatusCode(), exception.getMessage());
+
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(exception.getStatusCode().value())
+                .error("HTTP_CLIENT_ERROR")
+                .message("LinkedIn API error: " + exception.getStatusCode() + " - " + exception.getResponseBodyAsString())
+                .build();
+
+        return ResponseEntity
+                .status(exception.getStatusCode())
+                .body(response);
+    }
+
     @ExceptionHandler(ProfileParseException.class)
     public ResponseEntity<ErrorResponse> handleParseError(ProfileParseException exception) {
         log.error("Profile parse error: {}", exception.getMessage());

@@ -35,38 +35,41 @@ public class LinkedInHttpClient {
 
     /**
      * Fetch full profile data using LinkedIn's internal Voyager API
-     * This endpoint uses cookie-based authentication (li_at cookie + JSESSIONID + CSRF token)
+     * This endpoint uses cookie-based authentication (li_at cookie)
      *
      * Endpoint: GET /voyager/api/identity/dash/profiles
      * Params: q=memberIdentity, memberIdentity={publicIdentifier}, decorationId={decorationId}
      *
      * @param liAtCookie The li_at cookie value from a logged-in LinkedIn session
-     * @param jsessionId The JSESSIONID cookie value for CSRF protection
      * @param publicIdentifier The LinkedIn public identifier (vanity name from URL)
      * @return Raw JSON response from Voyager API
      */
-    public String fetchVoyagerProfile(String liAtCookie, String jsessionId, String publicIdentifier) {
+    public String fetchVoyagerProfile(String liAtCookie, String publicIdentifier) {
         log.debug("Fetching Voyager profile for public identifier: {}", publicIdentifier);
 
-        // CSRF token is derived from JSESSIONID: "ajax:" + JSESSIONID value (without quotes)
-        String csrfToken = "ajax:" + jsessionId.replace("\"", "");
-
-        return voyagerRestClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/voyager/api/identity/dash/profiles")
-                        .queryParam("q", "memberIdentity")
-                        .queryParam("memberIdentity", publicIdentifier)
-                        .queryParam("decorationId", properties.getProfileDecorationId())
-                        .build())
-                .header(HttpHeaders.COOKIE, "li_at=" + liAtCookie + "; JSESSIONID=\"" + jsessionId + "\"")
-                .header("csrf-token", csrfToken)
-                .header("x-li-lang", "en_US")
-                .header("x-restli-protocol-version", "2.0.0")
-                .header(HttpHeaders.ACCEPT, "application/vnd.linkedin.normalized+json+2.1")
-                .header(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .retrieve()
-                .body(String.class);
+        try {
+            return voyagerRestClient
+                    .get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/voyager/api/identity/dash/profiles")
+                            .queryParam("q", "memberIdentity")
+                            .queryParam("memberIdentity", publicIdentifier)
+                            .queryParam("decorationId", properties.getProfileDecorationId())
+                            .build())
+                    .header(HttpHeaders.COOKIE, "li_at=" + liAtCookie)
+                    .header("x-li-lang", "en_US")
+                    .header("x-restli-protocol-version", "2.0.0")
+                    .header(HttpHeaders.ACCEPT, "application/vnd.linkedin.normalized+json+2.1")
+                    .header(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .retrieve()
+                    .body(String.class);
+        } catch (Exception e) {
+            log.error("Failed to fetch Voyager profile: {}", e.getMessage(), e);
+            throw new com.anuj.LinkedinProfileExtractor.exception.ProfileFetchException(
+                    "Failed to fetch profile from LinkedIn Voyager API: " + e.getMessage(),
+                    e
+            );
+        }
     }
 
     /**

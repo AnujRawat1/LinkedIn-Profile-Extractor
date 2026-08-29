@@ -28,7 +28,6 @@ public class ProfileService {
         log.info("Starting profile extraction for LinkedIn username: {}", username);
 
         String liAtCookie = System.getenv("LINKEDIN_LI_AT_COOKIE");
-        String jsessionId = System.getenv("LINKEDIN_JSESSIONID");
 
         if (liAtCookie == null || liAtCookie.isEmpty()) {
             throw new LinkedInAuthenticationException(
@@ -36,13 +35,7 @@ public class ProfileService {
             );
         }
 
-        if (jsessionId == null || jsessionId.isEmpty()) {
-            throw new LinkedInAuthenticationException(
-                    "LINKEDIN_JSESSIONID environment variable is required for Voyager API CSRF protection"
-            );
-        }
-
-        String rawResponse = linkedInHttpClient.fetchVoyagerProfile(liAtCookie, jsessionId, username);
+        String rawResponse = linkedInHttpClient.fetchVoyagerProfile(liAtCookie, username);
 
         log.info("LinkedIn profile request completed for username: {}", username);
 
