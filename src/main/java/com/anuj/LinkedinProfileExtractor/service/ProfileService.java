@@ -4,6 +4,7 @@ import com.anuj.LinkedinProfileExtractor.client.LinkedInHttpClient;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileExtractionRequest;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileResponse;
+import com.anuj.LinkedinProfileExtractor.exception.LinkedInAuthenticationException;
 import com.anuj.LinkedinProfileExtractor.parser.ProfileParser;
 import com.anuj.LinkedinProfileExtractor.util.LinkedInUrlUtil;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +27,10 @@ public class ProfileService {
 
         log.info("Starting profile extraction for LinkedIn username: {}", username);
 
-        // TODO: This needs li_at cookie from a logged-in LinkedIn session
-        // In production, this would come from session management or user-provided
         String liAtCookie = System.getenv("LINKEDIN_LI_AT_COOKIE");
 
         if (liAtCookie == null || liAtCookie.isEmpty()) {
-            throw new IllegalStateException(
+            throw new LinkedInAuthenticationException(
                     "LINKEDIN_LI_AT_COOKIE environment variable is required for Voyager API access"
             );
         }
