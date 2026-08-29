@@ -6,17 +6,18 @@ import com.anuj.LinkedinProfileExtractor.dto.Experience;
 import com.anuj.LinkedinProfileExtractor.dto.Language;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
 import com.anuj.LinkedinProfileExtractor.exception.ProfileParseException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 @Component
+@Primary
 @RequiredArgsConstructor
 @Slf4j
 public class LinkedInProfileParser implements ProfileParser {
@@ -32,31 +33,47 @@ public class LinkedInProfileParser implements ProfileParser {
         try {
             JsonNode root = objectMapper.readTree(rawResponse);
 
-            // Voyager API uses REST.li pointer format with "included" array
-            JsonNode included = root.get("included");
-            JsonNode data = root.get("data");
-
-            if (data == null && included != null && !included.isEmpty()) {
-                // Profile data is in the first element of included array
-                data = included.get(0);
-            }
-
-            if (data == null) {
-                log.warn("No profile data found in Voyager response");
+            // Python implementation expects "elements" array at root level
+            JsonNode elements = root.get("elements");
+            if (elements == null || !elements.isArray() || elements.isEmpty()) {
+                log.warn("No elements array found in Voyager response");
                 return ProfileData.builder().build();
             }
 
+            JsonNode profileNode = elements.get(0);
+
+            // Extract base fields
+            String firstName = getText(profileNode, "firstName");
+            String lastName = getText(profileNode, "lastName");
+            String headline = getText(profileNode, "headline");
+            String about = getText(profileNode, "summary");
+            String location = extractLocation(profileNode);
+            String profilePictureUrl = extractProfilePicture(profileNode);
+
+            // Extract Skills
+            List<String> skills = extractSkills(profileNode);
+
+            // Extract Experience
+            List<Experience> experience = extractExperience(profileNode);
+
+            // Extract Education
+            List<Education> education = extractEducation(profileNode);
+
+            // Extract Certifications
+            List<Certification> certifications = extractCertifications(profileNode);
+
             return ProfileData.builder()
-                    .name(extractLocalizedText(data, "firstName") + " " + extractLocalizedText(data, "lastName"))
-                    .headline(extractLocalizedText(data, "headline"))
-                    .location(extractLocalizedText(data, "address"))
-                    .about(extractLocalizedText(data, "summary"))
-                    .profileImage(extractProfilePicture(data))
-                    .experience(parseVoyagerExperience(included))
-                    .education(parseVoyagerEducation(included))
-                    .skills(parseVoyagerSkills(included))
-                    .certifications(parseVoyagerCertifications(included))
-                    .languages(parseVoyagerLanguages(included))
+                    .firstName(firstName != null ? firstName : "")
+                    .lastName(lastName != null ? lastName : "")
+                    .headline(headline != null ? headline : "")
+                    .location(location)
+                    .about(about)
+                    .profilePictureUrl(profilePictureUrl)
+                    .skills(skills)
+                    .experience(experience)
+                    .education(education)
+                    .certifications(certifications)
+                    .languages(new ArrayList<>()) // Not extracted in Python version
                     .build();
 
         } catch (Exception e) {
@@ -65,258 +82,144 @@ public class LinkedInProfileParser implements ProfileParser {
         }
     }
 
-    /**
-     * Extract localized text from Voyager API response
-     * Voyager uses localized format: { "localized": { "en_US": "text" }, "preferredLocale": {...} }
-     */
-    private String extractLocalizedText(JsonNode node, String field) {
+    private String getText(JsonNode node, String field) {
         JsonNode fieldNode = node.get(field);
         if (fieldNode == null || fieldNode.isNull()) {
             return null;
         }
-
-        // Check for localized format
-        JsonNode localized = fieldNode.get("localized");
-        if (localized != null && !localized.isEmpty()) {
-            // Try common locales
-            String[] commonLocales = {"en_US", "en", "default"};
-            for (String locale : commonLocales) {
-                JsonNode localeNode = localized.get(locale);
-                if (localeNode != null && !localeNode.isNull()) {
-                    return localeNode.asText();
-                }
-            }
-            // Fallback to first available key
-            if (localized.size() > 0) {
-                return localized.get(0).asText();
-            }
-        }
-
-        // Fallback to direct text
         return fieldNode.asText();
     }
 
-    /**
-     * Extract profile picture URL from Voyager response
-     */
-    private String extractProfilePicture(JsonNode data) {
-        JsonNode profilePicture = data.get("profilePicture");
-        if (profilePicture == null || profilePicture.isNull()) {
-            return null;
-        }
-
-        JsonNode displayImage = profilePicture.get("displayImage");
-        if (displayImage != null && !displayImage.isNull()) {
-            return displayImage.asText();
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse experience from Voyager API included array
-     */
-    private List<Experience> parseVoyagerExperience(JsonNode included) {
-        List<Experience> experiences = new ArrayList<>();
-
-        if (included == null || !included.isArray()) {
-            return experiences;
-        }
-
-        for (JsonNode item : included) {
-            String type = getText(item, "$type");
-            if (type != null && type.contains("Position")) {
-                experiences.add(
-                        Experience.builder()
-                                .title(extractLocalizedText(item, "title"))
-                                .company(extractCompanyName(item))
-                                .companyUrl(extractCompanyUrl(item))
-                                .location(extractLocalizedText(item, "location"))
-                                .startDate(extractDate(item, "startDate"))
-                                .endDate(extractDate(item, "endDate"))
-                                .current(isCurrentPosition(item))
-                                .description(extractLocalizedText(item, "description"))
-                                .build()
-                );
-            }
-        }
-
-        return experiences;
-    }
-
-    private String extractCompanyName(JsonNode positionNode) {
-        JsonNode companyName = positionNode.get("companyName");
-        if (companyName != null && !companyName.isNull()) {
-            return extractLocalizedText(companyName, "name");
-        }
-        return null;
-    }
-
-    private String extractCompanyUrl(JsonNode positionNode) {
-        JsonNode companyUrn = positionNode.get("company");
-        if (companyUrn != null && !companyUrn.isNull()) {
-            // Convert URN to URL format
-            String urn = companyUrn.asText();
-            if (urn.startsWith("urn:li:company:")) {
-                String companyId = urn.substring("urn:li:company:".length());
-                return "https://www.linkedin.com/company/" + companyId;
-            }
-        }
-        return null;
-    }
-
-    private boolean isCurrentPosition(JsonNode positionNode) {
-        JsonNode endDate = positionNode.get("endDate");
-        return endDate == null || endDate.isNull();
-    }
-
-    /**
-     * Parse education from Voyager API included array
-     */
-    private List<Education> parseVoyagerEducation(JsonNode included) {
-        List<Education> educationList = new ArrayList<>();
-
-        if (included == null || !included.isArray()) {
-            return educationList;
-        }
-
-        for (JsonNode item : included) {
-            String type = getText(item, "$type");
-            if (type != null && type.contains("Education")) {
-                educationList.add(
-                        Education.builder()
-                                .school(extractSchoolName(item))
-                                .degree(extractLocalizedText(item, "degreeName"))
-                                .fieldOfStudy(extractLocalizedText(item, "fieldOfStudy"))
-                                .startDate(extractDate(item, "startDate"))
-                                .endDate(extractDate(item, "endDate"))
-                                .build()
-                );
-            }
-        }
-
-        return educationList;
-    }
-
-    private String extractSchoolName(JsonNode educationNode) {
-        JsonNode schoolName = educationNode.get("schoolName");
-        if (schoolName != null && !schoolName.isNull()) {
-            return extractLocalizedText(schoolName, "name");
-        }
-        return null;
-    }
-
-    /**
-     * Parse skills from Voyager API included array
-     */
-    private List<String> parseVoyagerSkills(JsonNode included) {
-        List<String> skills = new ArrayList<>();
-
-        if (included == null || !included.isArray()) {
-            return skills;
-        }
-
-        for (JsonNode item : included) {
-            String type = getText(item, "$type");
-            if (type != null && type.contains("Skill")) {
-                String skillName = extractLocalizedText(item, "name");
-                if (skillName != null && !skillName.isEmpty()) {
-                    skills.add(skillName);
+    private String extractLocation(JsonNode profileNode) {
+        JsonNode geoLocation = profileNode.get("geoLocation");
+        if (geoLocation != null && !geoLocation.isNull()) {
+            JsonNode geo = geoLocation.get("geo");
+            if (geo != null && !geo.isNull()) {
+                JsonNode defaultLocalizedName = geo.get("defaultLocalizedName");
+                if (defaultLocalizedName != null && !defaultLocalizedName.isNull()) {
+                    return defaultLocalizedName.asText();
                 }
             }
         }
+        return null;
+    }
 
+    private String extractProfilePicture(JsonNode profileNode) {
+        try {
+            JsonNode profilePicture = profileNode.get("profilePicture");
+            if (profilePicture == null || profilePicture.isNull()) {
+                return null;
+            }
+
+            JsonNode displayImageReference = profilePicture.get("displayImageReference");
+            if (displayImageReference == null || displayImageReference.isNull()) {
+                return null;
+            }
+
+            JsonNode vectorImage = displayImageReference.get("vectorImage");
+            if (vectorImage == null || vectorImage.isNull()) {
+                return null;
+            }
+
+            JsonNode rootUrl = vectorImage.get("rootUrl");
+            JsonNode artifacts = vectorImage.get("artifacts");
+
+            if (rootUrl != null && !rootUrl.isNull() && artifacts != null && artifacts.isArray() && artifacts.size() > 0) {
+                // Usually the last artifact in the array is the highest resolution
+                JsonNode lastArtifact = artifacts.get(artifacts.size() - 1);
+                JsonNode fileIdentifyingUrlPathSegment = lastArtifact.get("fileIdentifyingUrlPathSegment");
+                if (fileIdentifyingUrlPathSegment != null && !fileIdentifyingUrlPathSegment.isNull()) {
+                    return rootUrl.asText() + fileIdentifyingUrlPathSegment.asText();
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Failed to extract profile picture: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    private List<String> extractSkills(JsonNode profileNode) {
+        List<String> skills = new ArrayList<>();
+        JsonNode profileSkills = profileNode.get("profileSkills");
+        if (profileSkills != null && !profileSkills.isNull()) {
+            JsonNode skillsElements = profileSkills.get("elements");
+            if (skillsElements != null && skillsElements.isArray()) {
+                for (JsonNode skill : skillsElements) {
+                    String name = getText(skill, "name");
+                    if (name != null && !name.isEmpty()) {
+                        skills.add(name);
+                    }
+                }
+            }
+        }
         return skills;
     }
 
-    /**
-     * Parse certifications from Voyager API included array
-     */
-    private List<Certification> parseVoyagerCertifications(JsonNode included) {
-        List<Certification> certifications = new ArrayList<>();
-
-        if (included == null || !included.isArray()) {
-            return certifications;
-        }
-
-        for (JsonNode item : included) {
-            String type = getText(item, "$type");
-            if (type != null && type.contains("Certification")) {
-                certifications.add(
-                        Certification.builder()
-                                .name(extractLocalizedText(item, "name"))
-                                .issuer(extractLocalizedText(item, "authority"))
-                                .issueDate(extractDate(item, "issueDate"))
-                                .credentialUrl(extractCredentialUrl(item))
-                                .build()
-                );
+    private List<Experience> extractExperience(JsonNode profileNode) {
+        List<Experience> experienceList = new ArrayList<>();
+        JsonNode profilePositionGroups = profileNode.get("profilePositionGroups");
+        if (profilePositionGroups != null && !profilePositionGroups.isNull()) {
+            JsonNode expGroups = profilePositionGroups.get("elements");
+            if (expGroups != null && expGroups.isArray()) {
+                for (JsonNode group : expGroups) {
+                    JsonNode profilePositionInPositionGroup = group.get("profilePositionInPositionGroup");
+                    if (profilePositionInPositionGroup != null && !profilePositionInPositionGroup.isNull()) {
+                        JsonNode positions = profilePositionInPositionGroup.get("elements");
+                        if (positions != null && positions.isArray()) {
+                            for (JsonNode pos : positions) {
+                                experienceList.add(
+                                        Experience.builder()
+                                                .company(getText(pos, "companyName"))
+                                                .title(getText(pos, "title"))
+                                                .location(getText(pos, "locationName"))
+                                                .build()
+                                );
+                            }
+                        }
+                    }
+                }
             }
         }
-
-        return certifications;
+        return experienceList;
     }
 
-    private String extractCredentialUrl(JsonNode certificationNode) {
-        JsonNode url = certificationNode.get("url");
-        if (url != null && !url.isNull()) {
-            return url.asText();
-        }
-        return null;
-    }
-
-    /**
-     * Parse languages from Voyager API included array
-     */
-    private List<Language> parseVoyagerLanguages(JsonNode included) {
-        List<Language> languages = new ArrayList<>();
-
-        if (included == null || !included.isArray()) {
-            return languages;
-        }
-
-        for (JsonNode item : included) {
-            String type = getText(item, "$type");
-            if (type != null && type.contains("Language")) {
-                languages.add(
-                        Language.builder()
-                                .name(extractLocalizedText(item, "name"))
-                                .proficiency(extractLocalizedText(item, "proficiency"))
-                                .build()
-                );
+    private List<Education> extractEducation(JsonNode profileNode) {
+        List<Education> educationList = new ArrayList<>();
+        JsonNode profileEducations = profileNode.get("profileEducations");
+        if (profileEducations != null && !profileEducations.isNull()) {
+            JsonNode eduElements = profileEducations.get("elements");
+            if (eduElements != null && eduElements.isArray()) {
+                for (JsonNode edu : eduElements) {
+                    educationList.add(
+                            Education.builder()
+                                    .school(getText(edu, "schoolName"))
+                                    .degree(getText(edu, "degreeName"))
+                                    .fieldOfStudy(getText(edu, "fieldOfStudy"))
+                                    .build()
+                    );
+                }
             }
         }
-
-        return languages;
+        return educationList;
     }
 
-    /**
-     * Extract date from Voyager date format
-     * Voyager uses: { "year": 2020, "month": 1 }
-     */
-    private String extractDate(JsonNode node, String field) {
-        JsonNode dateNode = node.get(field);
-        if (dateNode == null || dateNode.isNull()) {
-            return null;
-        }
-
-        JsonNode year = dateNode.get("year");
-        JsonNode month = dateNode.get("month");
-
-        if (year != null && !year.isNull()) {
-            if (month != null && !month.isNull()) {
-                return year.asText() + "-" + String.format("%02d", month.asInt());
+    private List<Certification> extractCertifications(JsonNode profileNode) {
+        List<Certification> certificationList = new ArrayList<>();
+        JsonNode profileCertifications = profileNode.get("profileCertifications");
+        if (profileCertifications != null && !profileCertifications.isNull()) {
+            JsonNode certElements = profileCertifications.get("elements");
+            if (certElements != null && certElements.isArray()) {
+                for (JsonNode cert : certElements) {
+                    certificationList.add(
+                            Certification.builder()
+                                    .name(getText(cert, "name"))
+                                    .authority(getText(cert, "authority"))
+                                    .licenseNumber(getText(cert, "licenseNumber"))
+                                    .build()
+                    );
+                }
             }
-            return year.asText();
         }
-
-        return null;
-    }
-
-    private String getText(JsonNode root, String field) {
-        JsonNode node = root.get(field);
-        if (node == null || node.isNull()) {
-            return null;
-        }
-        return node.asText();
+        return certificationList;
     }
 }

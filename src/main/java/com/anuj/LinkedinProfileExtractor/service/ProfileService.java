@@ -1,6 +1,6 @@
 package com.anuj.LinkedinProfileExtractor.service;
 
-import com.anuj.LinkedinProfileExtractor.client.LinkedInSeleniumClient;
+import com.anuj.LinkedinProfileExtractor.client.LinkedInHttpClient;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileData;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileExtractionRequest;
 import com.anuj.LinkedinProfileExtractor.dto.ProfileResponse;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class ProfileService {
 
     private final LinkedInUrlUtil linkedInUrlUtil;
-    private final LinkedInSeleniumClient linkedInSeleniumClient;
+    private final LinkedInHttpClient linkedInHttpClient;
     private final ProfileParser profileParser;
 
     private final Dotenv dotenv = Dotenv.configure()
@@ -29,41 +29,44 @@ public class ProfileService {
     public ProfileResponse getProfile(ProfileExtractionRequest request) {
 
         String normalizedUrl = linkedInUrlUtil.normalizeUrl(request.getProfileUrl());
+        String publicIdentifier = linkedInUrlUtil.extractUsername(request.getProfileUrl());
 
         log.info("Starting profile extraction for LinkedIn URL: {}", normalizedUrl);
 
-        String liAtCookie = dotenv.get("LINKEDIN_LI_AT_COOKIE");
-        String jsessionIdCookie = dotenv.get("LINKEDIN_JSESSIONID");
+        String liAtCookie = dotenv.get("LI_AT");
+        String jsessionIdCookie = dotenv.get("JSESSIONID");
 
-        log.info("LINKEDIN_LI_AT_COOKIE value: {}", liAtCookie != null ? (liAtCookie.isEmpty() ? "EMPTY" : "SET") : "NULL");
-        log.info("LINKEDIN_JSESSIONID value: {}", jsessionIdCookie != null ? (jsessionIdCookie.isEmpty() ? "EMPTY" : "SET") : "NULL");
+        log.info("LI_AT value: {}", liAtCookie != null ? (liAtCookie.isEmpty() ? "EMPTY" : "SET") : "NULL");
+        log.info("JSESSIONID value: {}", jsessionIdCookie != null ? (jsessionIdCookie.isEmpty() ? "EMPTY" : "SET") : "NULL");
 
         if (liAtCookie == null || liAtCookie.isEmpty()) {
             throw new LinkedInAuthenticationException(
-                    "LINKEDIN_LI_AT_COOKIE environment variable is required for LinkedIn authentication"
+                    "LI_AT environment variable is required for LinkedIn authentication"
             );
         }
 
         if (jsessionIdCookie == null || jsessionIdCookie.isEmpty()) {
             throw new LinkedInAuthenticationException(
-                    "LINKEDIN_JSESSIONID environment variable is required for LinkedIn session"
+                    "JSESSIONID environment variable is required for LinkedIn session"
             );
         }
 
         try {
-            // Initialize Selenium WebDriver
-            linkedInSeleniumClient.initializeDriver();
+            // Fetch profile data using LinkedIn Voyager API
+            String jsonResponse = linkedInHttpClient.fetchVoyagerProfile(liAtCookie, jsessionIdCookie, publicIdentifier);
 
-            // Set LinkedIn session cookies
-            linkedInSeleniumClient.setLinkedInCookies(liAtCookie, jsessionIdCookie);
+            log.info("LinkedIn Voyager API response fetched successfully");
 
-            // Fetch profile page HTML
-            String htmlContent = linkedInSeleniumClient.fetchProfilePage(normalizedUrl);
+            // DIAGNOSTIC: Skip parsing to see response details
+            if (jsonResponse == null || jsonResponse.isEmpty()) {
+                log.error("DIAGNOSTIC - Response is null or empty, cannot parse");
+                throw new com.anuj.LinkedinProfileExtractor.exception.ProfileFetchException(
+                        "DIAGNOSTIC - Response is null or empty, cannot parse"
+                );
+            }
 
-            log.info("LinkedIn profile page fetched successfully");
-
-            // Parse HTML content
-            ProfileData profileData = profileParser.parse(htmlContent, normalizedUrl);
+            // Parse JSON response
+            ProfileData profileData = profileParser.parse(jsonResponse, normalizedUrl);
 
             log.info("Profile parsing completed successfully");
 
@@ -79,14 +82,6 @@ public class ProfileService {
                     "Failed to extract profile: " + e.getMessage(),
                     e
             );
-        } finally {
-            // Always close the driver
-            try {
-                Thread.sleep(1000); // Give time for any pending operations
-                linkedInSeleniumClient.closeDriver();
-            } catch (Exception e) {
-                log.warn("Error during driver cleanup: {}", e.getMessage());
-            }
         }
     }
 }

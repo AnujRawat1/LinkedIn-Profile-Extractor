@@ -31,7 +31,7 @@ public class LinkedInHttpClient {
         log.debug("Fetching Voyager profile for public identifier: {}", publicIdentifier);
 
         try {
-            return voyagerRestClient
+            var response = voyagerRestClient
                     .get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/voyager/api/identity/dash/profiles")
@@ -39,18 +39,18 @@ public class LinkedInHttpClient {
                             .queryParam("memberIdentity", publicIdentifier)
                             .queryParam("decorationId", properties.getProfileDecorationId())
                             .build())
-                    .header(HttpHeaders.COOKIE, "li_at=" + liAtCookie)
-                    .header("x-li-lang", "en_US")
+                    .header(HttpHeaders.COOKIE, "li_at=" + liAtCookie + "; JSESSIONID=" + jsessionidCookie)
+                    .header("csrf-token", jsessionidCookie != null ? jsessionidCookie.replace("\"", "") : "")
+                    .header(HttpHeaders.ACCEPT, "application/json")
                     .header("x-restli-protocol-version", "2.0.0")
-                    .header(HttpHeaders.ACCEPT, "application/vnd.linkedin.normalized+json+2.1")
                     .header(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                    .header("DNT", "1")
-                    .header("Connection", "keep-alive")
-                    .header("Sec-Fetch-Dest", "empty")
-                    .header("Sec-Fetch-Mode", "cors")
-                    .header("Sec-Fetch-Site", "same-origin")
                     .retrieve()
-                    .body(String.class);
+                    .toEntity(String.class);
+
+            log.info("LinkedIn Voyager API response fetched successfully");
+            log.debug("HTTP Status: {}", response.getStatusCode());
+
+            return response.getBody();
         } catch (Exception e) {
             log.error("Failed to fetch Voyager profile: {}", e.getMessage(), e);
             throw new com.anuj.LinkedinProfileExtractor.exception.ProfileFetchException(

@@ -13,13 +13,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Experience {
 
-    private String title;
     private String company;
-    private String companyUrl;
+    private String title;
     private String location;
-    private String startDate;
-    private String endDate;
-    private boolean current;
-    private String description;
 
 }

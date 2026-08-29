@@ -6,14 +6,12 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@Primary
 @Slf4j
 public class LinkedInHtmlParser implements ProfileParser {
 
@@ -38,18 +36,19 @@ public class LinkedInHtmlParser implements ProfileParser {
 
             log.info("Successfully parsed profile for: {}", name);
 
-            return new ProfileData(
-                    name,
-                    headline,
-                    location,
-                    about,
-                    profileImage,
-                    experiences,
-                    education,
-                    skills,
-                    certifications,
-                    languages
-            );
+            return ProfileData.builder()
+                    .firstName(name != null && name.contains(" ") ? name.split(" ")[0] : name)
+                    .lastName(name != null && name.contains(" ") ? name.substring(name.indexOf(" ") + 1) : "")
+                    .headline(headline)
+                    .location(location)
+                    .about(about)
+                    .profilePictureUrl(profileImage)
+                    .skills(skills)
+                    .experience(experiences)
+                    .education(education)
+                    .certifications(certifications)
+                    .languages(languages)
+                    .build();
         } catch (Exception e) {
             log.error("Failed to parse LinkedIn profile HTML: {}", e.getMessage(), e);
             throw new com.anuj.LinkedinProfileExtractor.exception.ProfileParseException(
@@ -172,8 +171,7 @@ public class LinkedInHtmlParser implements ProfileParser {
                         experiences.add(Experience.builder()
                                 .title(title)
                                 .company(company)
-                                .startDate(duration)
-                                .current(false)
+                                .location(null)
                                 .build());
                     }
                 } catch (Exception e) {
@@ -263,7 +261,11 @@ public class LinkedInHtmlParser implements ProfileParser {
                     String issuer = element.select("span.t-14").text();
                     
                     if (!name.isEmpty() && (name.toLowerCase().contains("certif") || name.toLowerCase().contains("certificate"))) {
-                        certifications.add(new Certification(name, issuer, "", ""));
+                        certifications.add(Certification.builder()
+                                .name(name)
+                                .authority(issuer)
+                                .licenseNumber(null)
+                                .build());
                     }
                 } catch (Exception e) {
                     log.warn("Could not extract individual certification: {}", e.getMessage());

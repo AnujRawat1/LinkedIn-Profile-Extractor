@@ -17,8 +17,11 @@ import java.util.List;
 @Schema(description = "LinkedIn profile data")
 public class ProfileData {
 
-    @Schema(description = "Full name")
-    private String name;
+    @Schema(description = "First name")
+    private String firstName;
+
+    @Schema(description = "Last name")
+    private String lastName;
 
     @Schema(description = "Professional headline")
     private String headline;
@@ -30,16 +33,16 @@ public class ProfileData {
     private String about;
 
     @Schema(description = "Profile picture URL")
-    private String profileImage;
+    private String profilePictureUrl;
+
+    @Schema(description = "Skills")
+    private List<String> skills;
 
     @Schema(description = "Work experience")
     private List<Experience> experience;
 
     @Schema(description = "Education history")
     private List<Education> education;
-
-    @Schema(description = "Skills")
-    private List<String> skills;
 
     @Schema(description = "Certifications")
     private List<Certification> certifications;

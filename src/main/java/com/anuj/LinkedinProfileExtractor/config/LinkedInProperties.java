@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class LinkedInProperties {
 
     // Voyager API configuration
-    private String voyagerBaseUrl;
-    private String profileDecorationId;
+    private String voyagerBaseUrl = "https://www.linkedin.com";
+    private String profileDecorationId = "com.linkedin.voyager.dash.deco.identity.profile.FullProfileWithEntities-93";
 
 }

@@ -14,8 +14,7 @@ import lombok.Setter;
 public class Certification {
 
     private String name;
-    private String issuer;
-    private String issueDate;
-    private String credentialUrl;
+    private String authority;
+    private String licenseNumber;
 
 }
