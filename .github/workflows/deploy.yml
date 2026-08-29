@@ -38,9 +38,9 @@ jobs:
       - name: Push Docker Image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Deploy on Render
-        uses: render-actions/deploy@v1
-        with:
-          api-token: ${{ secrets.RENDER_API_TOKEN }}
-          project-id: ${{ secrets.RENDER_PROJECT_ID }}
-          branch: main
+#      - name: Deploy on Render
+#        uses: render-actions/deploy@v1
+#        with:
+#          api-token: ${{ secrets.RENDER_API_TOKEN }}
+#          project-id: ${{ secrets.RENDER_SERVICE_ID }}
+#          branch: main

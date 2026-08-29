@@ -12,14 +12,6 @@ public class HttpClientConfig {
     private final LinkedInProperties properties;
 
     @Bean
-    public RestClient restClient() {
-
-        return RestClient.builder()
-                .baseUrl(properties.getBaseUrl())
-                .build();
-    }
-
-    @Bean
     public RestClient voyagerRestClient() {
 
         return RestClient.builder()

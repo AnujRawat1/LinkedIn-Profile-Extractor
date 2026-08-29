@@ -4,19 +4,9 @@ spring:
 
 
 server:
-  port: 8080
+  port: 8081
 
 linkedin:
-  client-id: ${LINKEDIN_CLIENT_ID}
-  client-secret: ${LINKEDIN_CLIENT_SECRET}
-  redirect-uri: ${LINKEDIN_REDIRECT_URI}
-
-  authorization-url: https://www.linkedin.com/oauth/v2/authorization
-  token-url: https://www.linkedin.com/oauth/v2/accessToken
-
-  base-url: https://api.linkedin.com
-  profile-endpoint: /v2/userinfo
-
   # Voyager API (internal LinkedIn web API)
   voyager-base-url: https://www.linkedin.com
   profile-decoration-id: com.linkedin.voyager.dash.deco.identity.profile.FullProfileWithEntities-93
