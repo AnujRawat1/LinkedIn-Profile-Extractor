@@ -35,17 +35,21 @@ public class LinkedInHttpClient {
 
     /**
      * Fetch full profile data using LinkedIn's internal Voyager API
-     * This endpoint uses cookie-based authentication (li_at cookie)
+     * This endpoint uses cookie-based authentication (li_at cookie + JSESSIONID + CSRF token)
      *
      * Endpoint: GET /voyager/api/identity/dash/profiles
      * Params: q=memberIdentity, memberIdentity={publicIdentifier}, decorationId={decorationId}
      *
      * @param liAtCookie The li_at cookie value from a logged-in LinkedIn session
+     * @param jsessionId The JSESSIONID cookie value for CSRF protection
      * @param publicIdentifier The LinkedIn public identifier (vanity name from URL)
      * @return Raw JSON response from Voyager API
      */
-    public String fetchVoyagerProfile(String liAtCookie, String publicIdentifier) {
+    public String fetchVoyagerProfile(String liAtCookie, String jsessionId, String publicIdentifier) {
         log.debug("Fetching Voyager profile for public identifier: {}", publicIdentifier);
+
+        // CSRF token is derived from JSESSIONID: "ajax:" + JSESSIONID value (without quotes)
+        String csrfToken = "ajax:" + jsessionId.replace("\"", "");
 
         return voyagerRestClient
                 .get()
@@ -55,7 +59,8 @@ public class LinkedInHttpClient {
                         .queryParam("memberIdentity", publicIdentifier)
                         .queryParam("decorationId", properties.getProfileDecorationId())
                         .build())
-                .header(HttpHeaders.COOKIE, "li_at=" + liAtCookie)
+                .header(HttpHeaders.COOKIE, "li_at=" + liAtCookie + "; JSESSIONID=\"" + jsessionId + "\"")
+                .header("csrf-token", csrfToken)
                 .header("x-li-lang", "en_US")
                 .header("x-restli-protocol-version", "2.0.0")
                 .header(HttpHeaders.ACCEPT, "application/vnd.linkedin.normalized+json+2.1")

@@ -59,17 +59,20 @@ LINKEDIN_CLIENT_SECRET=your_client_secret
 LINKEDIN_REDIRECT_URI=http://localhost:8080/api/auth/linkedin/callback
 
 # Voyager API Configuration (required)
-# Get this from your browser's LinkedIn session (li_at cookie)
+# Get these from your browser's LinkedIn session
 LINKEDIN_LI_AT_COOKIE=your_li_at_cookie_value
+LINKEDIN_JSESSIONID=your_jsessionid_value
 ```
 
-### How to get the li_at cookie:
+### How to get the authentication cookies:
 
 1. Log into LinkedIn in your browser
 2. Open Developer Tools (F12)
 3. Go to **Application** tab → **Cookies** → `https://www.linkedin.com`
-4. Find the `li_at` cookie and copy its value
-5. Set it in your `.env` file
+4. Find and copy these two cookies:
+   - `li_at` - Main authentication cookie
+   - `JSESSIONID` - Session ID for CSRF protection
+5. Set both in your `.env` file
 
 ## Running the Application
 
