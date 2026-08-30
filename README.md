@@ -1,6 +1,6 @@
 # LinkedIn Profile Extractor
 
-A Spring Boot application that extracts comprehensive LinkedIn profile data using reverse-engineered Voyager API endpoints.
+A Spring Boot application that extracts comprehensive LinkedIn profile data using the LinkedIn Voyager API.
 
 ## Features
 
@@ -13,11 +13,10 @@ A Spring Boot application that extracts comprehensive LinkedIn profile data usin
   - Languages
 - RESTful API with proper error handling
 - Swagger/OpenAPI documentation
-- Comprehensive test coverage
 
 ## Architecture
 
-The application uses a clean architecture pattern:
+The application follows a layered architecture:
 
 ```
 Controller → Service → HttpClient → LinkedIn Voyager API → Parser → DTO → Response
@@ -28,7 +27,7 @@ Controller → Service → HttpClient → LinkedIn Voyager API → Parser → DT
 - **ProfileController**: REST API endpoint for profile extraction
 - **ProfileService**: Business logic orchestration
 - **LinkedInHttpClient**: HTTP client for LinkedIn Voyager API
-- **LinkedInProfileParser**: Parses Voyager API responses into DTOs
+- **LinkedInProfileParser**: Parses Voyager API JSON responses into DTOs
 - **LinkedInUrlUtil**: URL validation and username extraction
 - **GlobalExceptionHandler**: Centralized error handling
 
@@ -36,45 +35,45 @@ Controller → Service → HttpClient → LinkedIn Voyager API → Parser → DT
 
 - Java 21+
 - Maven 3.8+
-- LinkedIn account (for authentication cookie)
+- LinkedIn account (for authentication cookies)
 
-## Installation
+## Quick Start
 
-1. Clone the repository:
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/your-username/LinkedinProfileExtractor.git
 cd LinkedinProfileExtractor
 ```
 
-2. Configure environment variables:
+### 2. Configure environment variables
+
 ```bash
 cp .env.example .env
 ```
 
-3. Edit `.env` and add your LinkedIn authentication cookie:
-```bash
-# OAuth Configuration (optional, for OAuth flow)
-LINKEDIN_CLIENT_ID=your_client_id
-LINKEDIN_CLIENT_SECRET=your_client_secret
-LINKEDIN_REDIRECT_URI=http://localhost:8080/api/auth/linkedin/callback
+### 3. Add your LinkedIn authentication cookies
 
-# Voyager API Configuration (required)
+Edit `.env` and add your LinkedIn session cookies:
+
+```bash
+# LinkedIn Voyager API Configuration
 # Get these from your browser's LinkedIn session
-LINKEDIN_LI_AT_COOKIE=your_li_at_cookie_value
-LINKEDIN_JSESSIONID=your_jsessionid_value
+LI_AT=your_li_at_cookie_value
+JSESSIONID=your_jsessionid_value
 ```
 
-### How to get the authentication cookies:
+#### How to get the authentication cookies:
 
 1. Log into LinkedIn in your browser
 2. Open Developer Tools (F12)
 3. Go to **Application** tab → **Cookies** → `https://www.linkedin.com`
 4. Find and copy these two cookies:
    - `li_at` - Main authentication cookie
-   - `JSESSIONID` - Session ID for CSRF protection
-5. Set both in your `.env` file
+   - `JSESSIONID` - Session ID for LinkedIn session
+5. Paste the values into your `.env` file
 
-## Running the Application
+### 4. Run the application
 
 ```bash
 mvn spring-boot:run
@@ -82,14 +81,12 @@ mvn spring-boot:run
 
 The application will start on `http://localhost:8080`
 
-## API Documentation
+### 5. Access the API
 
-Once the application is running, access the Swagger UI at:
-```
-http://localhost:8080/swagger-ui.html
-```
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **API Endpoint**: POST http://localhost:8080/api/v1/profiles
 
-## API Endpoints
+## API Usage
 
 ### Extract Profile
 
@@ -104,6 +101,13 @@ Extracts LinkedIn profile data from a profile URL.
 }
 ```
 
+**Example using curl:**
+```bash
+curl -X POST http://localhost:8080/api/v1/profiles \
+  -H "Content-Type: application/json" \
+  -d '{"profileUrl": "https://www.linkedin.com/in/john-doe/"}'
+```
+
 **Response:**
 ```json
 {
@@ -111,56 +115,38 @@ Extracts LinkedIn profile data from a profile URL.
   "message": "Profile extracted successfully",
   "username": "john-doe",
   "data": {
-    "name": "John Doe",
+    "firstName": "John",
+    "lastName": "Doe",
     "headline": "Senior Software Engineer",
     "location": "Bengaluru, India",
     "about": "Backend engineer",
-    "profileImage": "https://example.com/profile.jpg",
+    "profilePictureUrl": "https://example.com/profile.jpg",
     "experience": [
       {
         "title": "Senior Software Engineer",
         "company": "ABC Technologies",
-        "companyUrl": "https://www.linkedin.com/company/12345",
-        "location": "Bengaluru",
-        "startDate": "2022-01",
-        "endDate": null,
-        "current": true,
-        "description": "Building backend services."
+        "location": "Bengaluru"
       }
     ],
     "education": [
       {
         "school": "ABC University",
         "degree": "B.Tech",
-        "fieldOfStudy": "Computer Science",
-        "startDate": "2016",
-        "endDate": "2020"
+        "fieldOfStudy": "Computer Science"
       }
     ],
     "skills": ["Java", "Spring Boot"],
     "certifications": [
       {
         "name": "AWS Certified Developer",
-        "issuer": "AWS",
-        "issueDate": "2021-06",
-        "credentialUrl": "https://example.com/cert"
+        "authority": "AWS",
+        "licenseNumber": null
       }
     ],
-    "languages": [
-      {
-        "name": "English",
-        "proficiency": "Professional Working"
-      }
-    ]
+    "languages": []
   }
 }
 ```
-
-### OAuth Endpoints
-
-**GET** `/api/auth/linkedin` - Initiates LinkedIn OAuth flow
-
-**GET** `/api/auth/linkedin/callback` - OAuth callback handler
 
 ## Error Handling
 
@@ -168,7 +154,7 @@ The API uses standard HTTP status codes:
 
 - **200**: Success
 - **400**: Invalid LinkedIn URL
-- **401**: Authentication failed
+- **401**: Authentication failed (missing or invalid cookies)
 - **404**: Profile not found
 - **429**: Rate limit exceeded
 - **500**: Internal server error
@@ -190,45 +176,41 @@ Run the test suite:
 mvn test
 ```
 
-Run tests with coverage:
-```bash
-mvn test jacoco:report
-```
-
 ## Technology Stack
 
 - **Java 21**
 - **Spring Boot 4.1.1**
-- **Spring Web**
-- **Spring Validation**
+- **Spring Web** (REST API)
+- **Spring Validation** (Request validation)
 - **Jackson** (JSON processing)
 - **Lombok** (Code generation)
-- **JUnit 5** (Testing)
-- **Mockito** (Mocking)
+- **java-dotenv** (Environment variable management)
 - **SpringDoc OpenAPI** (API documentation)
+- **JUnit 5** (Testing)
 
 ## Authentication
 
-This application uses LinkedIn's internal Voyager API, which requires cookie-based authentication:
+This application uses LinkedIn's Voyager API, which requires cookie-based authentication:
 
 - **li_at cookie**: LinkedIn session authentication cookie
-- The cookie expires periodically and needs to be refreshed
-- Never commit the cookie to version control
-- Keep it secure as it provides access to your LinkedIn account
+- **JSESSIONID cookie**: Session ID for LinkedIn session
+- Cookies expire periodically and need to be refreshed
+- Never commit cookies to version control
+- Keep them secure as they provide access to your LinkedIn account
 
 ## Limitations
 
 - Requires manual cookie extraction from browser
-- Cookie expires and needs periodic refresh
+- Cookies expire and need periodic refresh
 - Rate limits apply (LinkedIn may throttle requests)
-- Voyager API is undocumented and may change without notice
+- Voyager API is internal and may change without notice
 - Only works with public LinkedIn profiles
 
 ## Security Considerations
 
 - Never commit `.env` file or credentials to git
-- Use environment variables for sensitive data
-- The li_at cookie provides access to your LinkedIn account
+- The `.env` file is already in `.gitignore`
+- The cookies provide access to your LinkedIn account
 - Implement rate limiting in production
 - Consider implementing session management for cookie refresh
 
@@ -240,11 +222,11 @@ This application uses LinkedIn's internal Voyager API, which requires cookie-bas
 src/
 ├── main/
 │   ├── java/com/anuj/LinkedinProfileExtractor/
+│   │   ├── client/          # HTTP clients
 │   │   ├── config/          # Configuration classes
 │   │   ├── controller/      # REST controllers
 │   │   ├── dto/             # Data transfer objects
 │   │   ├── exception/       # Custom exceptions
-│   │   ├── model/           # Response models
 │   │   ├── parser/          # Response parsers
 │   │   ├── service/         # Business logic
 │   │   └── util/            # Utilities
@@ -252,20 +234,26 @@ src/
 │       └── application.yaml # Application configuration
 └── test/
     └── java/com/anuj/LinkedinProfileExtractor/
-        ├── parser/          # Parser tests
         └── util/            # Utility tests
 ```
 
-### Building
+### Building the project
 
 ```bash
 mvn clean install
 ```
 
-### Running with different profiles
+### Running with Maven
 
 ```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+mvn spring-boot:run
+```
+
+### Running the JAR directly
+
+```bash
+mvn clean package
+java -jar target/LinkedinProfileExtractor-0.0.1-SNAPSHOT.jar
 ```
 
 ## Contributing
@@ -283,15 +271,4 @@ This project is for educational purposes. Use responsibly and respect LinkedIn's
 
 ## Disclaimer
 
-This application uses reverse-engineered LinkedIn API endpoints. This may violate LinkedIn's Terms of Service. Use at your own risk. The authors are not responsible for any consequences of using this software.
-
-## Future Enhancements
-
-- [ ] Implement automatic cookie refresh mechanism
-- [ ] Add caching for profile data
-- [ ] Implement rate limiting
-- [ ] Add support for company pages
-- [ ] Implement batch profile extraction
-- [ ] Add database persistence
-- [ ] Implement user authentication
-- [ ] Add monitoring and logging
+This application uses LinkedIn's internal Voyager API. This may violate LinkedIn's Terms of Service. Use at your own risk. The authors are not responsible for any consequences of using this software.
